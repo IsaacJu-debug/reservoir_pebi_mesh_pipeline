@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+
+<Problem>
+  <Geometry>
+    <Box
+      name="source"
+      xMin="{ 2.4689775e+04, 2.4685726e+04, -2.0000000e-04 }"
+      xMax="{ 2.5277197e+04, 2.5302351e+04, 1.5802478e+03 }"/>
+  </Geometry>
+</Problem>

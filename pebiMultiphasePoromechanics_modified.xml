@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Problem>
+
+  <Included>
+      <File name="./../pebiMultiphasePoromechanics_base.xml"/>
+  </Included>
+  
+  <Mesh>
+      <VTKMesh fieldNamesInGEOSX="{ rockPermeability_permeability, rockPorosity_referencePorosity }"
+               fieldsToImport="{ PERM, PORO }"
+               file="0001_frac_domain.vtk"
+               logLevel="4"
+               name="mesh"
+               partitionRefinement="3"
+               regionAttribute="CELL_MARKERS"/>
+  </Mesh>
+
+  <ElementRegions>
+      <CellElementRegion cellBlocks="{1_hexahedra, 1_pentagonalPrisms, 1_hexagonalPrisms, 1_heptagonalPrisms, 1_octagonalPrisms}"
+                         materialList="{ fluid, relperm, rockReservoir }"
+                         name="reservoir"/>
+      <CellElementRegion cellBlocks="{2_hexahedra, 2_pentagonalPrisms, 2_hexagonalPrisms, 2_heptagonalPrisms, 2_octagonalPrisms}"
+                         materialList="{ fluid, relperm, rockUnderburden }"
+                         name="underburden"/>
+     <CellElementRegion cellBlocks="{3_hexahedra, 3_pentagonalPrisms, 3_hexagonalPrisms, 3_heptagonalPrisms, 3_octagonalPrisms}"
+                         materialList="{ fluid, relperm, rockOverburden }"
+                         name="overburden"/>
+    
+  </ElementRegions>
+
+  <Events maxTime="7.10046e9" minTime="-1e11">
+    
+      <SoloEvent name="outputPostEquilibrationStep" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="0"/>
+      <SoloEvent name="outputInjectionPeriod1" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="3.45024e8"/>
+      <SoloEvent name="outputInjectionPeriod2" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="1.5780096e9"/>
+      <SoloEvent name="outputPostInjectionPeriod1" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="2.3655024e9"/>
+      <SoloEvent name="outputPostInjectionPeriod2" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="3.942e9"/>
+      <SoloEvent name="outputPostInjectionPeriod3" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="5.519e9"/>
+      <SoloEvent name="outputPostInjectionPeriod4" target="/Outputs/vtkOutput"
+                 targetExactTimestep="1"
+                 targetTime="7.0955e9"/>
+
+      <SoloEvent beginTime="-1e11" name="multiphasePoromechanicsPreEquilibrationStep"
+                 target="/Tasks/multiphasePoromechanicsPreEquilibrationStep"
+                 targetTime="-1e11"/>
+      <SoloEvent beginTime="-1e11" name="solidMechanicsPreEquilibrationStep"
+                 target="/Tasks/solidMechanicsPreEquilibrationStep"
+                 targetTime="-1e11"/>
+    
+      <PeriodicEvent beginTime="-1e11" endTime="0" maxEventDt="1e11"
+                     name="solverApplicationsEquilibration"
+                     target="/Solvers/poromechanics"/>
+
+      <SoloEvent name="multiphasePoromechanicsPostEquilibrationStep"
+                 target="/Tasks/multiphasePoromechanicsPostEquilibrationStep"
+                 targetTime="0"/>
+      <SoloEvent name="solidMechanicsPostEquilibrationStep"
+                 target="/Tasks/solidMechanicsPostEquilibrationStep"
+                 targetTime="0"/>
+    
+      <PeriodicEvent beginTime="0" endTime="1e3" name="solverApplicationInjectionPeriod1"
+                     target="/Solvers/poromechanics"/>
+      <PeriodicEvent beginTime="1e3" maxEventDt="1e9" name="solverApplicationInjectionPeriod2"
+                     target="/Solvers/poromechanics"/>
+    
+      <PeriodicEvent beginTime="0" name="compflowStatistics" target="/Tasks/compflowStatistics"
+                     targetExactTimestep="0"
+                     timeFrequency="1e9"/>
+      <PeriodicEvent beginTime="0" name="solidMechanicsStatistics"
+                     target="/Tasks/solidMechanicsStatistics"
+                     targetExactTimestep="0"
+                     timeFrequency="1e9"/>
+  </Events>
+
+</Problem>

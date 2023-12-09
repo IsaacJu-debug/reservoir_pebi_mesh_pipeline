@@ -1,0 +1,315 @@
+<?xml version="1.0" ?>
+
+<Problem>
+  <Solvers>
+    <MultiphasePoromechanics
+      name="poromechanics"
+      solidSolverName="mechanics"
+      flowSolverName="compositionalMultiphaseFlow"
+      logLevel="1"
+      initialDt="1e11"
+      targetRegions="{ reservoir }">
+      <NonlinearSolverParameters
+        newtonMaxIter="20"
+        maxTimeStepCuts="2000"	  
+        newtonTol="1.0e-3"/>
+      <LinearSolverParameters
+	logLevel="1"  
+        solverType="fgmres"
+        preconditionerType="mgr"
+        krylovTol="1.0e-4"
+        krylovMaxIter="200"
+        krylovAdaptiveTol="1"
+        krylovWeakestTol="1.0e-3"/>
+    </MultiphasePoromechanics>
+
+    <SolidMechanicsLagrangianSSLE
+      name="mechanics"
+      timeIntegrationOption="QuasiStatic"
+      logLevel="1"
+      discretization="FE1"
+      targetRegions="{ reservoir, underburden, overburden }"/>
+    
+    <CompositionalMultiphaseFVM
+      name="compositionalMultiphaseFlow"
+      logLevel="1"
+      discretization="fluidTPFA"
+      targetRegions="{ reservoir }"
+      temperature="380"
+      useMass="1"/>
+  </Solvers>
+
+  <Geometry>
+    <Box
+      name="source"
+      xMin="{ 24500, 25200,  2499 }"
+      xMax="{ 25500, 26000,  2701 }"/>
+
+    <Box
+      name="xneg"
+      xMin="{ -0.01, -1e9, -1e9 }"
+      xMax="{ +0.01, +1e9, +1e9 }"/>
+    <Box
+      name="xpos"
+      xMin="{ +49999, -1e9, -1e9 }"
+      xMax="{ +50001, +1e9, +1e9 }"/>
+    <Box
+      name="yneg"
+      xMin="{ -1e9, -0.01, -1e9 }"
+      xMax="{ +1e9, +0.01, +1e9 }"/>
+    <Box
+      name="ypos"
+      xMin="{ -1e9, +49999, -1e9 }"
+      xMax="{ +1e9, +50001, +1e9 }"/>
+    <Box
+      name="zneg"
+      xMin="{ -1e9, -1e9, -0.01 }"
+      xMax="{ +1e9, +1e9, +0.01 }"/>
+  </Geometry>
+
+  <NumericalMethods>
+    <FiniteElements>
+      <FiniteElementSpace
+        name="FE1"
+        order="1"/>
+    </FiniteElements>
+    <FiniteVolume>
+      <TwoPointFluxApproximation
+        name="fluidTPFA"/>
+    </FiniteVolume>
+  </NumericalMethods>
+
+
+  <Constitutive>
+
+    <BiotPorosity
+      name="rockPorosity"
+      grainBulkModulus="1.0e27"
+      defaultReferencePorosity="0.14"/>
+    <ConstantPermeability
+      name="rockPermeability"
+      permeabilityComponents="{ 2.0e-16, 2.0e-16, 2.0e-16 }"/>
+
+    <PorousElasticIsotropic
+      name="rockOverburden"
+      solidModelName="rockSolidOverburden"
+      porosityModelName="rockPorosity"
+      permeabilityModelName="rockPermeability"/>
+    <ElasticIsotropic
+      name="rockSolidOverburden"
+      defaultDensity="2250"
+      defaultYoungModulus="6e9" 
+      defaultPoissonRatio="0.3"/>
+
+    <PorousElasticIsotropic
+      name="rockUnderburden"
+      solidModelName="rockSolidUnderburden"
+      porosityModelName="rockPorosity"
+      permeabilityModelName="rockPermeability"/>
+    <ElasticIsotropic
+      name="rockSolidUnderburden"
+      defaultDensity="2600"
+      defaultYoungModulus="2e10" 
+      defaultPoissonRatio="0.25"/>
+
+    <PorousElasticIsotropic
+      name="rockReservoir"
+      solidModelName="rockSolidReservoir"
+      porosityModelName="rockPorosity"
+      permeabilityModelName="rockPermeability"/>
+    <ElasticIsotropic
+      name="rockSolidReservoir"
+      defaultDensity="2400"
+      defaultYoungModulus="11.5e9" 
+      defaultPoissonRatio="0.29"/>
+    
+    <CO2BrinePhillipsFluid
+      name="fluid"
+      phaseNames="{ gas, water }"
+      componentNames="{ co2, water }"
+      componentMolarWeight="{ 44e-3, 18e-3 }"
+      phasePVTParaFiles="{ pvtgas.txt, pvtliquid.txt }"
+      flashModelParaFile="co2flash.txt"/>
+    <TableRelativePermeabilityHysteresis
+      name="relperm"
+      phaseNames="{ gas, water }"
+      drainageWettingNonWettingRelPermTableNames="{ waterRelativePermeabilityTable,
+                                                  gasRelativePermeabilityTable }"
+      imbibitionNonWettingRelPermTableName="imbibitionGasRelativePermeabilityTable"
+      imbibitionWettingRelPermTableName="imbibitionWaterRelativePermeabilityTable"/>
+  </Constitutive>
+
+  <FieldSpecifications>
+
+    <HydrostaticEquilibrium
+      name="equil"
+      objectPath="ElementRegions"
+      datumElevation="2600"
+      datumPressure="2.7212e7"
+      initialPhaseName="water"
+      componentNames="{ co2, water }"
+      componentFractionVsElevationTableNames="{ initGasCompFracTable,
+                                                initWaterCompFracTable }"
+      temperatureVsElevationTableName="initTempTable"/>
+    <SourceFlux
+      name="sourceTerm"
+      objectPath="ElementRegions"
+      component="0"
+      scale="1"
+      functionName="totalMassTable"
+      setNames="{ source }"/>
+
+    <FieldSpecification
+      name="bulkModulusUnderburden"
+      initialCondition="1"
+      setNames="{ all }"
+      objectPath="ElementRegions/underburden"
+      fieldName="rockSolidUnderburden_bulkModulus"
+      scale="1.0"
+      functionName="bulkModulusTableUnderburden"/>
+    <FieldSpecification
+      name="shearModulusUnderburden"
+      initialCondition="1"
+      setNames="{ all }"
+      objectPath="ElementRegions/underburden"
+      fieldName="rockSolidUnderburden_shearModulus"
+      scale="1.0"
+      functionName="shearModulusTableUnderburden"/>
+    <FieldSpecification
+      name="bulkModulusOverburden"
+      initialCondition="1"
+      setNames="{ all }"
+      objectPath="ElementRegions/overburden"
+      fieldName="rockSolidOverburden_bulkModulus"
+      scale="1.0"
+      functionName="bulkModulusTableOverburden"/>
+    <FieldSpecification
+      name="shearModulusOverburden"
+      initialCondition="1"
+      setNames="{ all }"
+      objectPath="ElementRegions/overburden"
+      fieldName="rockSolidOverburden_shearModulus"
+      scale="1.0"
+      functionName="shearModulusTableOverburden"/>
+    
+    <FieldSpecification
+      name="xconstraint"
+      objectPath="nodeManager"
+      fieldName="totalDisplacement"
+      component="0"
+      scale="0.0"
+      setNames="{ xneg, xpos }"/>
+    <FieldSpecification
+      name="yconstraint"
+      objectPath="nodeManager"
+      fieldName="totalDisplacement"
+      component="1"
+      scale="0.0"
+      setNames="{ yneg, ypos }"/>
+    <FieldSpecification
+      name="zconstraint"
+      objectPath="nodeManager"
+      fieldName="totalDisplacement"
+      component="2"
+      scale="0.0"
+      setNames="{ zneg }"/>
+    <FieldSpecification name="barrierTransMult" objectPath="faceManager" fieldName="permeabilityTransMultiplier" scale="0" initialCondition="1" setNames="{ 4 }"/>
+
+  </FieldSpecifications>
+
+  <Tasks>
+    <CompositionalMultiphaseStatistics
+      name="compflowStatistics"
+      flowSolverName="compositionalMultiphaseFlow"
+      logLevel="1"
+      computeRegionStatistics="1"/>
+    <SolidMechanicsStatistics
+      name="solidMechanicsStatistics"
+      solidSolverName="mechanics"
+      logLevel="1"/>
+
+    <MultiphasePoromechanicsInitialization 
+      logLevel="1"      
+      name="multiphasePoromechanicsPreEquilibrationStep"
+      performStressInitialization="1"
+      poromechanicsSolverName="poromechanics"/>
+    <SolidMechanicsStateReset 
+      logLevel="2"      
+      name="solidMechanicsPreEquilibrationStep"
+      solidSolverName="mechanics"/>
+    
+    <MultiphasePoromechanicsInitialization
+      logLevel="1"      
+      name="multiphasePoromechanicsPostEquilibrationStep"
+      performStressInitialization="0"
+      poromechanicsSolverName="poromechanics"/>
+    <SolidMechanicsStateReset 
+      logLevel="2"      
+      name="solidMechanicsPostEquilibrationStep"
+      solidSolverName="mechanics"/>
+  </Tasks>
+
+  <Functions>
+    <TableFunction
+      name="initGasCompFracTable"
+      coordinateFiles="{ elevation.txt }"
+      voxelFile="initGasCompFrac.txt"/>
+    <TableFunction
+      name="initWaterCompFracTable"
+      coordinateFiles="{ elevation.txt }"
+      voxelFile="initWaterCompFrac.txt"/>       
+    <TableFunction
+      name="initTempTable"
+      coordinateFiles="{ elevation.txt }"
+      voxelFile="initTemp.txt"/>        
+    <TableFunction
+      name="waterRelativePermeabilityTable"
+      coordinateFiles="{ phaseVolFraction_water.txt }"
+      voxelFile="relPerm_water.txt"/>
+    <TableFunction
+      name="gasRelativePermeabilityTable"
+      coordinateFiles="{ phaseVolFraction_gas.txt }"
+      voxelFile="relPerm_gas.txt"/>
+    <TableFunction
+      name="imbibitionWaterRelativePermeabilityTable"
+      coordinateFiles="{ phaseVolFraction_water.txt }"
+      voxelFile="relPerm_imbibition_water.txt"/>
+    <TableFunction
+      name="imbibitionGasRelativePermeabilityTable"
+      coordinateFiles="{ phaseVolFraction_gas.txt }"
+      voxelFile="relPerm_imbibition_gas.txt"/>
+    <TableFunction
+      name="totalMassTable"
+      inputVarNames="{ time }"
+      interpolation="lower"
+      coordinates="{ -1e11, 0, 2.3670144e9, 10e12 }"
+      values="{ 0.0, -47.5646879756, 0.0, 0.0 }"/>
+    <TableFunction
+      name="bulkModulusTableUnderburden"
+      inputVarNames="{ elementCenter }" 
+      coordinateFiles="{ xlin.txt, ylin.txt, zlinUnderburden.txt }"
+      voxelFile="bulkModulusUnderburden.txt"/>
+    <TableFunction
+      name="shearModulusTableUnderburden"
+      inputVarNames="{ elementCenter }"         
+      coordinateFiles="{ xlin.txt, ylin.txt, zlinUnderburden.txt }"
+      voxelFile="shearModulusUnderburden.txt"/>
+    <TableFunction
+      name="bulkModulusTableOverburden"
+      inputVarNames="{ elementCenter }" 
+      coordinateFiles="{ xlin.txt, ylin.txt, zlinOverburden.txt }"
+      voxelFile="bulkModulusOverburden.txt"/>
+    <TableFunction
+      name="shearModulusTableOverburden"
+      inputVarNames="{ elementCenter }"         
+      coordinateFiles="{ xlin.txt, ylin.txt, zlinOverburden.txt }"
+      voxelFile="shearModulusOverburden.txt"/> 
+  </Functions>
+  
+  <Outputs>
+    <VTK
+      name="vtkOutput"
+      onlyPlotSpecifiedFieldNames="1"
+      fieldNames="{ elementCenter, totalDisplacement, pressure, deltaPressure, phaseVolumeFraction, fluid_phaseCompFraction, fluid_phaseDensity, rockPermeability_permeability, rockPorosity_referencePorosity }"/>
+  </Outputs>
+</Problem>
