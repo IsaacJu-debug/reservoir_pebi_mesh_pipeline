@@ -1,4 +1,7 @@
 %% 2.5D reservoir grid
+%% This script is to generate fractured reservoir models with heterogeneous geophysical properties
+%% Currently, the geomodel is given as an input created from a python file.
+
 clear all;
 close all;
 clc;
@@ -189,7 +192,30 @@ for iCase = 1:nCases
   wellCellID = write_well_box( iCase, G, wellNo, baseFileName, ...
                                 reservoirBottom, reservoirTop);    
   write_well_index( iCase, G, rock, wellCellID ); 
+
+  %% Write output
+  currentFolder = pwd;
+  mesh_folder = '01_mesh';
+  xml_folder = '02_xml';
+  rock_folder = '03_rock_prop';
+
+  if ~exist(xml_folder, 'dir')
+      mkdir(xml_folder);
+      disp(strcat('mkdir xml_folder...'));
+  end
+
+  if ~exist(mesh_folder, 'dir')
+      mkdir(mesh_folder);
+      disp(strcat('mkdir mesh_folder...'));
+  end
+
+  if ~exist(rock_folder, 'dir')
+      mkdir(rock_folder);
+      disp(strcat('mkdir rock_folder...'));
+  end
+   
   vtk_name = strcat( num2str(iCase,'%0.4d'), '_', filePad, '_domain.vtk' );
+  vtk_path = fullfile(currentFolder, mesh_folder, vtk_name);
 
   if isFractured
     % when generating fractured vtk, we need ensure fractures information
@@ -214,7 +240,7 @@ for iCase = 1:nCases
     end
     
     nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, ...
-                                    vtk_name, reservoirBottom, reservoirTop, isSplited);
+                                    vtk_path, reservoirBottom, reservoirTop, isSplited);
     updateCellBlocksInXml(filename, nPrisms);
 
   else
@@ -222,7 +248,7 @@ for iCase = 1:nCases
     attribute(:) = 1; 
     attribute( G.cells.centroids(:,3) < reservoirBottom ) = 2;
     attribute( G.cells.centroids(:,3) > reservoirTop ) = 3;
-    write_vtk( G, Pts, rock, attribute, wellNo, vtk_name);
+    write_vtk( G, Pts, rock, attribute, wellNo, vtk_path);
   end
 
   
