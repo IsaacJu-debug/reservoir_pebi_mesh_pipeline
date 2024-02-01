@@ -141,14 +141,6 @@ function nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, filename, 
     
   %% cell data
   fprintf(FID_vtk,'CELL_DATA %d\n', length(cell_markers));  
-  if isSplited
-    %% cell data
-    fprintf(FID_vtk,'SCALARS FAULT int 1\n');
-    fprintf(FID_vtk,'LOOKUP_TABLE default\n');
-    fprintf(FID_vtk, ...
-          '%d\n', ...
-          fault_markers ); 
-  end
 
   fprintf(FID_vtk,'SCALARS CELL_MARKERS int 1\n');
   fprintf(FID_vtk,'LOOKUP_TABLE default\n');
@@ -158,8 +150,12 @@ function nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, filename, 
 
   %% field data
   cell_size = length(cell_markers);
+  field_number = 2;
+  if isSplited
+      field_number = 3; % we need to add one more field for hosting fault
+  end
   fprintf(FID_vtk, '\n');  
-  fprintf(FID_vtk,'FIELD FieldData %d\n', 2);  % the number should correspond to the number of fields
+  fprintf(FID_vtk,'FIELD FieldData %d\n', field_number);  % the number should correspond to the number of fields
   fprintf(FID_vtk,'PERM 3 %d float\n', cell_size);
   fprintf(FID_vtk, ...
           '%11.5e %11.5e %11.5e\n', ...        
@@ -177,6 +173,13 @@ function nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, filename, 
           '%11.5e\n', ...
           rock.poro); 
   
+  if isSplited
+    %% cell data
+    fprintf(FID_vtk,'FAULT 1 %d int\n', cell_size);
+    fprintf(FID_vtk, ...
+          '%d\n', ...
+          fault_markers ); 
+  end
   fclose( FID_vtk);
   
 end 
