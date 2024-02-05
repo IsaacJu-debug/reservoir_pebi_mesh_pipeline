@@ -1,4 +1,4 @@
-%% This script is for generating 2D incline fracture PEBI mesh (Chap 2)
+%% This script is for generating 2D vertical fractured PEBI mesh (Chap 3)
 %% 1. We need to add fault field so that mesh_doctor can identify the plane to split
 %% 2. We only generate PEBI mesh, conforming to the fault.
 clear all;
@@ -18,7 +18,7 @@ kmapSizes = [50]; % the grid resolution of geomodel
 nX = kmapSizes(1);
 nY = nX;
 
-baseLine = '_incline_frac.vtk'; % file name
+baseLine = '_vertical_fracture.vtk'; % file name
 xmlFilename = ''; % xml input for single inclined fracture
 nLayers = 3; % Number of layers
 nLayersInUnderburden = 0; % Number of layers belonging to underburden 
@@ -34,9 +34,10 @@ reservoirTop = thickness;  % The top of reservoir
 %% Generate 2D PEBI grid
 % 2D PEBI grid is constructed for the provided domain outline, with
 % refinement around the wells
-nList   = [10, 20, 30, 40, 50]; % Approximate number of cells in x-direction
-outline = [-40.0, -40.0; -40.0, 40.0; 40.0, 40.0; 40.0,-40.0]; % x-y plane size
-faceLines = {[-0.93963, -0.3420;0.93963, 0.3420]};
+nList   = [50]; % Approximate number of cells in x-direction
+outline = [-2250.0, -2250.0; -2250.0, 2250.0; 2250.0, 2250.0; 2250.0,-2250.0]; % x-y plane size
+faceLines = {[0.0,-2200.0;0.0,2200.0]}; 
+
 containFracture = true;
 isSplited = true;
 
@@ -61,7 +62,7 @@ for i = 1:size(nList, 2)
             'CCEps'          , 0.02*max(domainSize) , ...
             'faceConstraints', faceLines    , ...
             'FCRefinement'   , true         , ...  % if we need to refine around faults, faceConstraints needs to be given
-            'FCFactor'      , 0.02           , ... % Relative size of fault cells
+            'FCFactor'      , 0.2           , ... % Relative size of fault cells
             'FCEps'         , 0.08*max(domainSize), ... % the smaller, the more adrupt the change is
             'useMrstPebi', true);
         %G2D = removeShortEdges(G2D, 1); % The grid may contain very short edges.
@@ -138,8 +139,10 @@ for i = 1:size(nList, 2)
     vtk_path = fullfile(currentFolder, mesh_folder, vtk_name);
     nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, ...
                             vtk_path, reservoirBottom, reservoirTop, isSplited);
-
-    updateCellBlocksInXml(xmlFilename, nPrisms);
+    
+    if xmlFilename ~= ''
+        updateCellBlocksInXml(xmlFilename, nPrisms);
+    end
     % output rock properties
     rock_name = strcat(  num2str(i, '%0.4d'), '_rock.txt' );
     rock_path = fullfile(currentFolder, rock_folder, rock_name);
