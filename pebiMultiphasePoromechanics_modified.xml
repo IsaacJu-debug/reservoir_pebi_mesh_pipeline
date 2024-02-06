@@ -16,13 +16,13 @@
   </Mesh>
 
   <ElementRegions>
-      <CellElementRegion cellBlocks="{1_hexahedra, 1_pentagonalPrisms, 1_hexagonalPrisms, 1_heptagonalPrisms, 1_octagonalPrisms}"
+      <CellElementRegion cellBlocks="{1_wedges, 1_hexahedra, 1_pentagonalPrisms, 1_hexagonalPrisms, 1_heptagonalPrisms, 1_octagonalPrisms}"
                          materialList="{ fluid, relperm, rockReservoir }"
                          name="reservoir"/>
-      <CellElementRegion cellBlocks="{2_hexahedra, 2_pentagonalPrisms, 2_hexagonalPrisms, 2_heptagonalPrisms, 2_octagonalPrisms}"
+      <CellElementRegion cellBlocks="{2_wedges, 2_hexahedra, 2_pentagonalPrisms, 2_hexagonalPrisms, 2_heptagonalPrisms, 2_octagonalPrisms}"
                          materialList="{ fluid, relperm, rockUnderburden }"
                          name="underburden"/>
-     <CellElementRegion cellBlocks="{3_hexahedra, 3_pentagonalPrisms, 3_hexagonalPrisms, 3_heptagonalPrisms, 3_octagonalPrisms}"
+     <CellElementRegion cellBlocks="{3_wedges, 3_hexahedra, 3_pentagonalPrisms, 3_hexagonalPrisms, 3_heptagonalPrisms, 3_octagonalPrisms}"
                          materialList="{ fluid, relperm, rockOverburden }"
                          name="overburden"/>
     

@@ -19,7 +19,7 @@ nX = kmapSizes(1);
 nY = nX;
 
 baseLine = '_vertical_fracture.vtk'; % file name
-xmlFilename = ''; % xml input for single inclined fracture
+xmlFilename = 'pebiMultiphasePoromechanics.xml'; % xml input for single inclined fracture
 nLayers = 3; % Number of layers
 nLayersInUnderburden = 0; % Number of layers belonging to underburden 
 nLayersInReservoir = nLayers; % Number of layers belonging to reservoir
@@ -34,10 +34,23 @@ reservoirTop = thickness;  % The top of reservoir
 %% Generate 2D PEBI grid
 % 2D PEBI grid is constructed for the provided domain outline, with
 % refinement around the wells
-nList   = [50]; % Approximate number of cells in x-direction
-outline = [-2250.0, -2250.0; -2250.0, 2250.0; 2250.0, 2250.0; 2250.0,-2250.0]; % x-y plane size
-faceLines = {[0.0,-2200.0;0.0,2200.0]}; 
+nList   = [25]; % Approximate number of cells in x-direction
 
+
+geo.xMax = 2250;
+geo.yMax = 2250;
+geo.xMin = -2250;
+geo.yMin = -2250;
+
+geo.fracDepth = [150, 75, -75, -150];
+
+outline = [-2250.0, -2250.0; -2250.0, 2250.0; 2250.0, 2250.0; 2250.0,-2250.0]; % x-y plane size
+faceLines = {[0.0,geo.yMax; 0.0,geo.yMin], ...
+              [0.0, 150; geo.xMax, 150], ... % horizontal line 1
+              [0.0, -75; geo.xMax, -75], ... % horizontal line 2
+              [geo.xMin, 75; 0, 75], ... % horizontal line 3
+              [geo.xMin, -150; 0, -150] };  % horizontal line 4
+ 
 containFracture = true;
 isSplited = true;
 
@@ -62,10 +75,10 @@ for i = 1:size(nList, 2)
             'CCEps'          , 0.02*max(domainSize) , ...
             'faceConstraints', faceLines    , ...
             'FCRefinement'   , true         , ...  % if we need to refine around faults, faceConstraints needs to be given
-            'FCFactor'      , 0.2           , ... % Relative size of fault cells
-            'FCEps'         , 0.08*max(domainSize), ... % the smaller, the more adrupt the change is
-            'useMrstPebi', true);
-        %G2D = removeShortEdges(G2D, 1); % The grid may contain very short edges.
+            'FCFactor'      , 0.1           , ... % Relative size of fault cells
+            'FCEps'         , 0.08*max(domainSize)); % the smaller, the more adrupt the change is
+
+        G2D = removeShortEdges(G2D, 1); % The grid may contain very short edges.
                             % We remove these
     else
         Width = max(outline(:,1));
@@ -137,15 +150,13 @@ for i = 1:size(nList, 2)
     vtk_name = strcat( num2str(i, '%0.4d'), file_name );
     fprintf('Writing %s\n', vtk_name);
     vtk_path = fullfile(currentFolder, mesh_folder, vtk_name);
-    nPrisms = write_vtk_field_data( G, rock, numFacesAlongFault, ...
-                            vtk_path, reservoirBottom, reservoirTop, isSplited);
+    nPrisms = writeVTKFieldData( G, rock, numFacesAlongFault, ...
+                            vtk_path, geo, isSplited);
     
-    if xmlFilename ~= ''
-        updateCellBlocksInXml(xmlFilename, nPrisms);
-    end
+    updateCellBlocksInXml(xmlFilename, nPrisms);
     % output rock properties
-    rock_name = strcat(  num2str(i, '%0.4d'), '_rock.txt' );
-    rock_path = fullfile(currentFolder, rock_folder, rock_name);
-    write_rock_prop(cell_rock_prop, rock_path);
+    %rock_name = strcat(  num2str(i, '%0.4d'), '_rock.txt' );
+    %rock_path = fullfile(currentFolder, rock_folder, rock_name);
+    %write_rock_prop(cell_rock_prop, rock_path);
 
 end
