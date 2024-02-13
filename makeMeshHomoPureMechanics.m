@@ -19,7 +19,7 @@ nX = kmapSizes(1);
 nY = nX;
 
 baseLine = '_incline_frac.vtk'; % file name
-xmlFilename = ''; % xml input for single inclined fracture
+xmlFilename = 'pebiMultiphasePoromechanics.xml'; % xml input for single inclined fracture
 nLayers = 3; % Number of layers
 nLayersInUnderburden = 0; % Number of layers belonging to underburden 
 nLayersInReservoir = nLayers; % Number of layers belonging to reservoir
@@ -141,8 +141,8 @@ for i = 1:size(nList, 2)
 
     updateCellBlocksInXml(xmlFilename, nPrisms);
     % output rock properties
-    rock_name = strcat(  num2str(i, '%0.4d'), '_rock.txt' );
-    rock_path = fullfile(currentFolder, rock_folder, rock_name);
-    write_rock_prop(cell_rock_prop, rock_path);
+    %rock_name = strcat(  num2str(i, '%0.4d'), '_rock.txt' );
+    %rock_path = fullfile(currentFolder, rock_folder, rock_name);
+    %write_rock_prop(cell_rock_prop, rock_path);
 
 end

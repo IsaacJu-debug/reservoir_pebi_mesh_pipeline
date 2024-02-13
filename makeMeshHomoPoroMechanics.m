@@ -18,14 +18,13 @@ kmapSizes = [50]; % the grid resolution of geomodel
 nX = kmapSizes(1);
 nY = nX;
 
-baseLine = '_vertical_fracture.vtk'; % file name
+baseLine = 'vertical_fracture.vtk'; % file name
 xmlFilename = 'pebiMultiphasePoromechanics.xml'; % xml input for single inclined fracture
-nLayers = 3; % Number of layers
+nLayers = 1; % Number of layers
 nLayersInUnderburden = 0; % Number of layers belonging to underburden 
 nLayersInReservoir = nLayers; % Number of layers belonging to reservoir
 
-thickness = 0.05; % plain deformation
-fault_z = 1.0; % split the faces along z = 1.0
+thickness = 500.0; % plain deformation
 layerThickness = ones(nLayers,1)*thickness/nLayers; % two-body system
 
 reservoirBottom = 0.0;     % the bottomo of reservoir 
@@ -36,7 +35,7 @@ reservoirTop = thickness;  % The top of reservoir
 % refinement around the wells
 nList   = [25]; % Approximate number of cells in x-direction
 
-
+% geo is a struct that gives the spatial locations of different fractures
 geo.xMax = 2250;
 geo.yMax = 2250;
 geo.xMin = -2250;
